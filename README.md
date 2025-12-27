@@ -1,4 +1,4 @@
-# HULIOS 🧅
+<h1 align="center">HULIOS 🛡️ </h1>
 
 **H**ardened **U**niversal **L**inux **I**nvisibility and **O**nion **S**ystem
 
@@ -6,18 +6,20 @@ The name *HULIOS* is inspired by both **Rust**, the programming language, and **
 
 A Rust-based transparent Tor proxy that routes **all system traffic** through the Tor network enhanced security, proper DNS isolation, and modern Linux compatibility.
 
-![Rust](https://img.shields.io/badge/Rust-1.70+-orange?logo=rust)
-![License](https://img.shields.io/badge/License-MIT-blue)
-![Platform](https://img.shields.io/badge/Platform-Linux-green?logo=linux)
+<p align="center">
+  <img src="https://img.shields.io/badge/Rust-1.70+-orange?logo=rust" alt="Rust">
+  <img src="https://img.shields.io/badge/License-MIT-blue" alt="License">
+  <img src="https://img.shields.io/badge/Platform-Linux-green?logo=linux" alt="Platform">
+</p>
 
 ## Features
 
-- 🔒 **Complete Traffic Anonymization** - All TCP traffic routed through Tor
-- 🌐 **DNS Leak Prevention** - System resolver neutralized, DNS forced through Tor
-- 🛡️ **Default-Deny Firewall** - Only Tor user can access the internet
-- 🚫 **IPv6 Blocked** - Prevents bypass via IPv6
-- 👁️ **Tor Crash Monitoring** - Alerts if Tor dies unexpectedly
-- ⚡ **Aggressive Resolver Handling** - Masks systemd-resolved to prevent resurrection
+-  **Complete Traffic Anonymization** - All TCP traffic routed through Tor
+-  **DNS Leak Prevention** - System resolver neutralized, DNS forced through Tor
+-  **Default-Deny Firewall** - Only Tor user can access the internet
+-  **IPv6 Blocked** - Prevents bypass via IPv6
+-  **Tor Crash Monitoring** - Alerts if Tor dies unexpectedly
+-  **Aggressive Resolver Handling** - Masks systemd-resolved to prevent resurrection
 
 ## Security Model
 
@@ -97,27 +99,27 @@ sudo hulios flush
 │          │                                                  │
 │          ▼                                                  │
 │  ┌─────────────────┐                                        │
-│  │  System Resolver │ ──→ /etc/resolv.conf = 127.0.0.1     │
+│  │  System Resolver │ ──→ /etc/resolv.conf = 127.0.0.1      │
 │  └─────────────────┘                                        │
 │          │                                                  │
 │          ▼                                                  │
 │  ┌─────────────────────────────────────────┐                │
-│  │           iptables NAT                   │                │
-│  │  DNS (port 53) → REDIRECT → 127.0.0.1:9061 (Tor DNS)    │
-│  │  TCP           → REDIRECT → 127.0.0.1:9051 (Tor Trans)  │
+│  │           iptables NAT                  │                │
+│  │  DNS (port 53) → REDIRECT → 127.0.0.1:9061 (Tor DNS)     │
+│  │  TCP           → REDIRECT → 127.0.0.1:9051 (Tor Trans)   │
 │  └─────────────────────────────────────────┘                │
 │          │                                                  │
 │          ▼                                                  │
 │  ┌─────────────────────────────────────────┐                │
-│  │           iptables FILTER                │                │
-│  │  Policy: DROP (deny-all)                 │                │
-│  │  ACCEPT: loopback, tor user, established │                │
-│  │  DROP: everything else                   │                │
+│  │           iptables FILTER               │                │
+│  │  Policy: DROP (deny-all)                │                │
+│  │  ACCEPT: loopback, tor user, established│                │
+│  │  DROP: everything else                  │                │
 │  └─────────────────────────────────────────┘                │
 │          │                                                  │
 │          ▼                                                  │
 │  ┌─────────────────┐                                        │
-│  │   Tor Process   │ ──→ Tor Network ──→ Internet          │
+│  │   Tor Process   │ ──→ Tor Network ──→ Internet           │
 │  │  (user: tor)    │                                        │
 │  └─────────────────┘                                        │
 └─────────────────────────────────────────────────────────────┘
@@ -181,8 +183,8 @@ HULIOS sends desktop notifications for:
 
 | Event | Notification |
 |-------|-------------|
-| Start | "HULIOS Started - All traffic now routed through Tor 🧅" |
-| Restart | "HULIOS Restarted - Tor connection refreshed 🔄" |
+| Start | "HULIOS Started - All traffic now routed through Tor " |
+| Restart | "HULIOS Restarted - Tor connection refreshed " |
 | Stop | "HULIOS Stopped - Normal network restored" |
 | Tor Crash | "⚠️ HULIOS CRITICAL - Tor process crashed!" |
 
@@ -233,3 +235,4 @@ This tool is for **educational and legitimate privacy purposes only**. The autho
 ## Credits
 
 - [Tor Project](https://www.torproject.org/) for the Tor network
+- [NIPE](https://github.com/htrgouvea/nipe) as an inspiration
