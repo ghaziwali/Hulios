@@ -42,6 +42,18 @@ HULIOS implements a strict security model:
 
 ## Installation
 
+### From AUR (Arch Linux)
+
+If you are using an AUR helper like paru or yay, you can install HULIOS directly:
+
+```bash
+# Using paru
+paru -S hulios-git
+
+# Using yay
+yay -S hulios-git
+```
+
 ### From Source
 
 ```bash
