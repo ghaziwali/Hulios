@@ -244,6 +244,11 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 This tool is for **educational and legitimate privacy purposes only**. The authors are not responsible for misuse. Always comply with local laws and terms of service.
 
+## ⚠️ Security Notice
+
+This repository is the only official source maintained by the original author. Third-party copies or redistributions may contain changes that are not reviewed or endorsed here. For security reasons, only use releases published from this repository.
+
+
 ## Credits
 
 - [Tor Project](https://www.torproject.org/) for the Tor network
