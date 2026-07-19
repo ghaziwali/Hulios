@@ -1,0 +1,25 @@
+[package]
+name = "hulios-netcompat"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+hulios-tun = { workspace = true }
+hulios-dns = { workspace = true }
+hulios-common = { workspace = true }
+aya = { workspace = true }
+zbus = { workspace = true, features = ["tokio"] }
+rtnetlink = { workspace = true }
+netlink-packet-route = "0.19.0"
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+toml = { workspace = true }
+futures = { workspace = true }
+libc = { workspace = true }
+

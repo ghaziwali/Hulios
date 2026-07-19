@@ -1,0 +1,22 @@
+[package]
+name = "hulios-ebpf"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+test = false
+doctest = false
+
+[[bin]]
+name = "hulios_ebpf"
+path = "src/main.rs"
+test = false
+
+[dependencies]
+aya-ebpf = { workspace = true }
+aya-log-ebpf = { workspace = true }
+hulios-common = { workspace = true }
+
+[build-dependencies]
+aya-build = "0.1.3"

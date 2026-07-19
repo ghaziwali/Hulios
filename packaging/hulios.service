@@ -1,0 +1,36 @@
+[Unit]
+Description=Hulios - System-wide Tor Transparent Proxy
+After=network-pre.target
+Wants=network-pre.target
+Before=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/hulios start
+ExecStop=/usr/bin/hulios stop
+# The + prefix bypasses User= and NoNewPrivileges for this command only,
+# allowing hulios recover to run as root even after the main process drops to nobody.
+# This is required because recover needs CAP_NET_ADMIN to remove stale ip rules
+# and root to remove chattr +i from /etc/resolv.conf.
+ExecStopPost=+/usr/bin/hulios recover
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=180
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hulios
+RuntimeDirectory=hulios
+
+# Capabilities
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_BPF CAP_NET_BIND_SERVICE CAP_SYS_TIME
+AmbientCapabilities=CAP_NET_ADMIN CAP_BPF CAP_NET_BIND_SERVICE
+SecureBits=keep-caps
+
+# Hardening
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

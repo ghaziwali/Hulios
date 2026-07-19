@@ -1,0 +1,5 @@
+[toolchain]
+channel = "nightly"
+components = ["rust-src", "clippy", "rustfmt"]
+targets = ["bpfel-unknown-none", "x86_64-unknown-linux-gnu"]
+

@@ -1,0 +1,6 @@
+# Hulios project funding configuration
+
+custom:
+  - "bitcoin:bc1q0gllvd7fe2y48emjd4shf42ul3cl4pgda5zpqz"
+  - "USDT (TRON/TRC20): TQWUmTATa8sDntobTNGkLmbgmHVS9iWCRx"
+  - "USDC (Ethereum/ERC20): 0x16aFd1De7889071194A026D79393eb3CE659181e"

@@ -1,0 +1,29 @@
+[package]
+name = "hulios-dns"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+hulios-common = { workspace = true }
+hulios-onionmasq = { workspace = true }
+hickory-resolver = { workspace = true }
+hickory-server = { workspace = true }
+hickory-proto = { workspace = true }
+arti-client = { workspace = true }
+tor-rtcompat = { workspace = true }
+zbus = { workspace = true, features = ["tokio"] }
+nix = { workspace = true, features = ["user", "process", "fs"] }
+serde = { workspace = true, features = ["derive"] }
+toml = { workspace = true }
+libc = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+async-trait = "0.1"
+
+
+
