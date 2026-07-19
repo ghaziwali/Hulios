@@ -1,0 +1,38 @@
+[package]
+name = "hulios-state"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+hulios-tun = { workspace = true }
+hulios-dns = { workspace = true }
+hulios-onionmasq = { workspace = true }
+hulios-netcompat = { workspace = true }
+hulios-cli = { workspace = true }
+hulios-common = { workspace = true }
+libc = { workspace = true }
+aya = { workspace = true, features = ["async_tokio"] }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+toml = { workspace = true }
+nix = { workspace = true }
+sd-notify = { workspace = true }
+arti-client = { workspace = true }
+tor-rtcompat = { workspace = true }
+chrono = { workspace = true }
+hickory-resolver = { workspace = true }
+caps = { workspace = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+
+

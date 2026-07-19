@@ -1,0 +1,30 @@
+[package]
+name = "hulios-onionmasq"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+hulios-tun = { workspace = true }
+arti-client = { workspace = true, features = ["flowctl-cc", "tokio", "native-tls", "bridge-client", "pt-client", "geoip"] }
+tor-rtcompat = { workspace = true, features = ["tokio", "native-tls"] }
+tor-config = { workspace = true }
+tor-netdir = { version = "0.42", features = ["geoip", "experimental-api"] }
+tor-geoip = "0.42"
+onionmasq = { workspace = true }
+aya = { workspace = true, features = ["async_tokio"] }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+once_cell = { workspace = true }
+futures = { workspace = true }
+libc = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+async-trait = "0.1"
+
+

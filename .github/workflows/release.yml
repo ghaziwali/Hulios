@@ -1,0 +1,81 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-release:
+    name: Build Release Asset
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+        include:
+          - target: x86_64-unknown-linux-gnu
+            cross_pkg: ""
+          - target: aarch64-unknown-linux-gnu
+            cross_pkg: "gcc-aarch64-linux-gnu"
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang libelf-dev ${{ matrix.cross_pkg }}
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        components: rust-src, clippy, rustfmt
+        targets: bpfel-unknown-none, ${{ matrix.target }}
+
+    - name: Cache cargo registry and build target
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-release-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-release-cargo-${{ matrix.target }}-
+
+    - name: Cache bpf-linker
+      id: cache-bpf-linker
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/bpf-linker
+        key: ${{ runner.os }}-bpf-linker
+
+    - name: Install bpf-linker
+      if: steps.cache-bpf-linker.outputs.cache-hit != 'true'
+      run: |
+        cargo install bpf-linker
+
+    - name: Build release binary
+      run: |
+        cargo build --release --target ${{ matrix.target }}
+
+    - name: Package release asset
+      run: |
+        mkdir -p dist
+        cp target/${{ matrix.target }}/release/hulios dist/
+        cp packaging/hulios.service dist/
+        tar -czf hulios-${{ github.ref_name }}-${{ matrix.target }}.tar.gz -C dist .
+
+    - name: Upload asset to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          hulios-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
+        draft: true
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

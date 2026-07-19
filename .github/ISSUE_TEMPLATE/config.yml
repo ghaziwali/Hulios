@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a Security Vulnerability
+    url: https://github.com/ghaziwali/Hulios/security/advisories/new
+    about: Report security vulnerabilities (e.g. network leaks, privilege escalation) privately via GitHub Advisory.

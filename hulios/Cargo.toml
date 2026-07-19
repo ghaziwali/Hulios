@@ -1,0 +1,37 @@
+[package]
+name = "hulios"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "hulios"
+path = "src/main.rs"
+
+[dependencies]
+hulios-tun = { workspace = true }
+hulios-dns = { workspace = true }
+hulios-onionmasq = { workspace = true }
+hulios-state = { workspace = true }
+hulios-netcompat = { workspace = true }
+hulios-cli = { workspace = true }
+aya = { workspace = true, features = ["async_tokio"] }
+aya-log = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+anyhow = { workspace = true }
+caps = { workspace = true }
+thiserror = { workspace = true }
+libc = { workspace = true }
+nix = { workspace = true, features = ["signal"] }
+toml = { workspace = true }
+clap = { workspace = true }
+seccompiler = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+[build-dependencies]
+aya-build = "0.1.3"
+

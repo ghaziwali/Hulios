@@ -1,0 +1,6 @@
+[target.bpfel-unknown-none]
+runner = "true"
+linker = "bpf-linker"
+
+[build]
+target = "x86_64-unknown-linux-gnu"

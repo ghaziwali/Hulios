@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang libelf-dev
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        components: rust-src, clippy, rustfmt
+        targets: bpfel-unknown-none, x86_64-unknown-linux-gnu
+
+    - name: Cache cargo registry and build target
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Cache bpf-linker
+      id: cache-bpf-linker
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/bpf-linker
+        key: ${{ runner.os }}-bpf-linker
+
+    - name: Install bpf-linker
+      if: steps.cache-bpf-linker.outputs.cache-hit != 'true'
+      run: |
+        cargo install bpf-linker
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy --workspace --all-targets -- -D warnings
+
+    - name: Build workspace
+      run: cargo build --workspace
+
+    - name: Run unit tests
+      run: cargo test --workspace --lib
