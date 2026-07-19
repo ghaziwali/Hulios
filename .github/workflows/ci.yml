@@ -29,7 +29,7 @@ jobs:
         targets: bpfel-unknown-none, x86_64-unknown-linux-gnu
 
     - name: Cache cargo registry and build target
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           ~/.cargo/registry
@@ -41,7 +41,7 @@ jobs:
 
     - name: Cache bpf-linker
       id: cache-bpf-linker
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.cargo/bin/bpf-linker
         key: ${{ runner.os }}-bpf-linker
