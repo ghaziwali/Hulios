@@ -91,6 +91,16 @@ Hulios automatically generates a default, self-documenting template file at **/e
 
 ---
 
+## 💖 Donate
+
+If you find Hulios useful and would like to support its ongoing security development and research, donations are greatly appreciated:
+
+*   **Bitcoin (BTC):** `bc1q0gllvd7fe2y48emjd4shf42ul3cl4pgda5zpqz`
+*   **USDT (TRON / TRC20):** `TQWUmTATa8sDntobTNGkLmbgmHVS9iWCRx`
+*   **USDC (Ethereum / ERC20):** `0x16aFd1De7889071194A026D79393eb3CE659181e`
+
+---
+
 ## ⚠️ Disclaimer
 
 Hulios securing the network transport layer (Layer 3) does not guarantee total anonymity. 
