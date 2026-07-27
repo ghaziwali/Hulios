@@ -96,8 +96,9 @@ pub async fn check_dns_resolution(ipv6_mode: Option<hulios_cli::Ipv6Mode>) -> Re
         }
         return Ok(());
     }
-    use hickory_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
-    use hickory_resolver::TokioAsyncResolver;
+    use hickory_resolver::config::{NameServerConfig, ResolverConfig, ResolverOpts};
+    use hickory_resolver::net::runtime::TokioRuntimeProvider;
+    use hickory_resolver::TokioResolver;
     use std::net::SocketAddr;
     use std::time::Duration;
 
@@ -158,13 +159,14 @@ pub async fn check_dns_resolution(ipv6_mode: Option<hulios_cli::Ipv6Mode>) -> Re
         .context(format!("Failed to parse Hickory bind IP: {}", ip_str))?;
 
     let ns_addr = SocketAddr::from((ip, port));
-    let mut config = ResolverConfig::new();
-    config.add_name_server(NameServerConfig::new(ns_addr, Protocol::Udp));
+    let mut config = ResolverConfig::from_parts(None, vec![], vec![]);
+    config.add_name_server(NameServerConfig::udp(ns_addr.ip()));
     let mut opts = ResolverOpts::default();
     opts.timeout = Duration::from_secs(1);
     opts.attempts = 1;
 
-    let resolver = TokioAsyncResolver::tokio(config, opts.clone());
+    let resolver =
+        TokioResolver::builder_with_config(config, TokioRuntimeProvider::default()).build()?;
     let _lookup = resolver
         .lookup_ip("example.com.")
         .await
@@ -173,9 +175,11 @@ pub async fn check_dns_resolution(ipv6_mode: Option<hulios_cli::Ipv6Mode>) -> Re
     if ipv6_mode == Some(hulios_cli::Ipv6Mode::Tor) {
         let ip_ipv6: std::net::IpAddr = "fdbe::53".parse().unwrap();
         let ns_addr_ipv6 = SocketAddr::from((ip_ipv6, port));
-        let mut config_ipv6 = ResolverConfig::new();
-        config_ipv6.add_name_server(NameServerConfig::new(ns_addr_ipv6, Protocol::Udp));
-        let resolver_ipv6 = TokioAsyncResolver::tokio(config_ipv6, opts);
+        let mut config_ipv6 = ResolverConfig::from_parts(None, vec![], vec![]);
+        config_ipv6.add_name_server(NameServerConfig::udp(ns_addr_ipv6.ip()));
+        let resolver_ipv6 =
+            TokioResolver::builder_with_config(config_ipv6, TokioRuntimeProvider::default())
+                .build()?;
         let _lookup_ipv6 = resolver_ipv6
             .lookup_ip("example.com.")
             .await

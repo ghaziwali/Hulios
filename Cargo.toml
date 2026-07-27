@@ -38,9 +38,9 @@ tor-config = "0.42"
 tun = { version = "0.6", default-features = false, features = ["async"] }
 onionmasq = { git = "https://gitlab.torproject.org/tpo/core/onionmasq", package = "onion-tunnel", rev = "73afb3189ac11c6532a2bf647a2cb41a2d2e16ea" }
 tokio = { version = "1", default-features = false, features = ["full"] }
-hickory-server = { version = "0.24" }
-hickory-resolver = "0.24"
-hickory-proto = "0.24"
+hickory-server = { version = "0.26.1" }
+hickory-resolver = "0.26.1"
+hickory-proto = "0.26.1"
 rtnetlink = "0.14"
 netlink-packet-route = "0.21"
 sysctl = "0.5"

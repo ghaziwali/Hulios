@@ -79,7 +79,8 @@ jobs:
       with:
         files: |
           hulios-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
-        draft: true
+        draft: false
+        prerelease: auto
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

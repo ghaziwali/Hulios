@@ -6,13 +6,12 @@ use tracing::{debug, error};
 use arti_client::TorClient;
 use tor_rtcompat::PreferredRuntime;
 
-use hickory_proto::op::{Header, MessageType, ResponseCode};
+use hickory_proto::op::{Header, HeaderCounts, Metadata, ResponseCode};
 use hickory_proto::rr::rdata::{A, AAAA, PTR};
 use hickory_proto::rr::{Name, RData, Record, RecordType};
-use hickory_server::authority::MessageResponseBuilder;
-use hickory_server::server::{
-    Request, RequestHandler, ResponseHandler, ResponseInfo, ServerFuture,
-};
+use hickory_server::net::runtime::Time;
+use hickory_server::server::{Request, RequestHandler, ResponseHandler, ResponseInfo, Server};
+use hickory_server::zone_handler::MessageResponseBuilder;
 
 use crate::check_rebinding;
 
@@ -72,20 +71,22 @@ pub struct ForwardingHandler {
 
 #[async_trait::async_trait]
 impl RequestHandler for ForwardingHandler {
-    async fn handle_request<R: ResponseHandler>(
+    async fn handle_request<R: ResponseHandler, T: Time>(
         &self,
         request: &Request,
         response_handle: R,
     ) -> ResponseInfo {
         let mut response_handle = response_handle;
-        debug!("DNS Query received: {:?}", request.query());
-        let query = request.query();
+        let query = &request.queries.queries()[0];
+        debug!("DNS Query received: {:?}", query);
         let name = query.name().to_string();
         let hostname = name.trim_end_matches('.').to_string();
         let qtype = query.query_type();
 
-        let mut header = Header::response_from_request(request.header());
-        header.set_message_type(MessageType::Response);
+        let mut header = Header {
+            metadata: Metadata::response_from_request(&request.metadata),
+            counts: HeaderCounts::default(),
+        };
 
         match qtype {
             RecordType::A | RecordType::AAAA => {
@@ -104,9 +105,9 @@ impl RequestHandler for ForwardingHandler {
                                 "DNS Rebinding detected for hostname {} (IPs: {:?})",
                                 hostname, ips
                             );
-                            header.set_response_code(ResponseCode::Refused);
+                            header.metadata.response_code = ResponseCode::Refused;
                             let response = MessageResponseBuilder::from_message_request(request)
-                                .build(header, vec![], vec![], vec![], vec![]);
+                                .build(header.metadata, vec![], vec![], vec![], vec![]);
                             response_handle
                                 .send_response(response)
                                 .await
@@ -129,7 +130,7 @@ impl RequestHandler for ForwardingHandler {
                             }
                             let records_refs: Vec<&Record> = records.iter().collect();
                             let response = MessageResponseBuilder::from_message_request(request)
-                                .build(header, records_refs, vec![], vec![], vec![]);
+                                .build(header.metadata, records_refs, vec![], vec![], vec![]);
                             response_handle
                                 .send_response(response)
                                 .await
@@ -141,9 +142,9 @@ impl RequestHandler for ForwardingHandler {
                     }
                     Err(e) => {
                         debug!("Tor resolve error for {}: {:?}", hostname, e);
-                        header.set_response_code(ResponseCode::ServFail);
+                        header.metadata.response_code = ResponseCode::ServFail;
                         let response = MessageResponseBuilder::from_message_request(request).build(
-                            header,
+                            header.metadata,
                             vec![],
                             vec![],
                             vec![],
@@ -178,7 +179,7 @@ impl RequestHandler for ForwardingHandler {
                             }
                             let records_refs: Vec<&Record> = records.iter().collect();
                             let response = MessageResponseBuilder::from_message_request(request)
-                                .build(header, records_refs, vec![], vec![], vec![]);
+                                .build(header.metadata, records_refs, vec![], vec![], vec![]);
                             response_handle
                                 .send_response(response)
                                 .await
@@ -189,9 +190,9 @@ impl RequestHandler for ForwardingHandler {
                         }
                         Err(e) => {
                             debug!("Tor resolve_ptr error for {}: {:?}", hostname, e);
-                            header.set_response_code(ResponseCode::ServFail);
+                            header.metadata.response_code = ResponseCode::ServFail;
                             let response = MessageResponseBuilder::from_message_request(request)
-                                .build(header, vec![], vec![], vec![], vec![]);
+                                .build(header.metadata, vec![], vec![], vec![], vec![]);
                             response_handle
                                 .send_response(response)
                                 .await
@@ -203,9 +204,9 @@ impl RequestHandler for ForwardingHandler {
                     }
                 } else {
                     debug!("Could not parse PTR IP from hostname {}", hostname);
-                    header.set_response_code(ResponseCode::NXDomain);
+                    header.metadata.response_code = ResponseCode::NXDomain;
                     let response = MessageResponseBuilder::from_message_request(request).build(
-                        header,
+                        header.metadata,
                         vec![],
                         vec![],
                         vec![],
@@ -222,9 +223,9 @@ impl RequestHandler for ForwardingHandler {
             }
             _ => {
                 debug!("Unsupported query type {:?}", qtype);
-                header.set_response_code(ResponseCode::NotImp);
+                header.metadata.response_code = ResponseCode::NotImp;
                 let response = MessageResponseBuilder::from_message_request(request).build(
-                    header,
+                    header.metadata,
                     vec![],
                     vec![],
                     vec![],
@@ -281,12 +282,12 @@ pub async fn start_dns_resolver_with_sockets(
     tcp_listeners: Vec<TcpListener>,
 ) -> Result<DnsHandle, anyhow::Error> {
     let handler = ForwardingHandler { resolver };
-    let mut server = ServerFuture::new(handler);
+    let mut server = Server::new(handler);
     for sock in udp_sockets {
         server.register_socket(sock);
     }
     for listener in tcp_listeners {
-        server.register_listener(listener, std::time::Duration::from_secs(5));
+        server.register_listener(listener, std::time::Duration::from_secs(5), 1024);
     }
 
     let handle = tokio::spawn(async move {
@@ -332,8 +333,10 @@ pub async fn start_dns_resolver(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hickory_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
-    use hickory_resolver::TokioAsyncResolver;
+    use hickory_resolver::config::{NameServerConfig, ResolverConfig, ResolverOpts};
+    use hickory_resolver::net::runtime::TokioRuntimeProvider;
+    use hickory_resolver::net::{DnsError, NetError};
+    use hickory_resolver::TokioResolver;
     use std::str::FromStr;
 
     #[tokio::test]
@@ -379,14 +382,18 @@ mod tests {
         .unwrap();
 
         // Setup client resolver pointing to our mock server
-        let mut config = ResolverConfig::new();
-        config.add_name_server(NameServerConfig::new(local_addr, Protocol::Udp));
+        let mut config = ResolverConfig::from_parts(None, vec![], vec![]);
+        let mut ns_config = NameServerConfig::udp(local_addr.ip());
+        ns_config.connections[0].port = local_addr.port();
+        config.add_name_server(ns_config);
         let mut opts = ResolverOpts::default();
         // Fast timeout for tests
-        opts.timeout = std::time::Duration::from_millis(500);
+        opts.timeout = std::time::Duration::from_secs(3);
         opts.attempts = 1;
 
-        let resolver = TokioAsyncResolver::tokio(config, opts);
+        let resolver = TokioResolver::builder_with_config(config, TokioRuntimeProvider::default())
+            .build()
+            .unwrap();
 
         // 1. Test standard A resolution
         let response = resolver.lookup_ip("example.com.").await.unwrap();
@@ -395,19 +402,25 @@ mod tests {
 
         // 2. Test DNS rebinding protection (RFC1918 private / loopback IP)
         let err_loopback = resolver.lookup_ip("rebind.com.").await.unwrap_err();
-        match err_loopback.kind() {
-            hickory_resolver::error::ResolveErrorKind::NoRecordsFound { response_code, .. } => {
-                assert_eq!(*response_code, ResponseCode::Refused);
+        match err_loopback {
+            NetError::Dns(DnsError::NoRecordsFound(no_records)) => {
+                assert_eq!(no_records.response_code, ResponseCode::Refused);
             }
-            other => panic!("Expected NoRecordsFound with Refused, got {:?}", other),
+            NetError::Dns(DnsError::ResponseCode(code)) => {
+                assert_eq!(code, ResponseCode::Refused);
+            }
+            other => panic!("Expected Refused, got {:?}", other),
         }
 
         let err_private = resolver.lookup_ip("rebind-private.com.").await.unwrap_err();
-        match err_private.kind() {
-            hickory_resolver::error::ResolveErrorKind::NoRecordsFound { response_code, .. } => {
-                assert_eq!(*response_code, ResponseCode::Refused);
+        match err_private {
+            NetError::Dns(DnsError::NoRecordsFound(no_records)) => {
+                assert_eq!(no_records.response_code, ResponseCode::Refused);
             }
-            other => panic!("Expected NoRecordsFound with Refused, got {:?}", other),
+            NetError::Dns(DnsError::ResponseCode(code)) => {
+                assert_eq!(code, ResponseCode::Refused);
+            }
+            other => panic!("Expected Refused, got {:?}", other),
         }
 
         // 3. Test PTR query handling
@@ -416,8 +429,12 @@ mod tests {
             .await
             .unwrap();
         let names: Vec<String> = ptr_response
+            .answers()
             .iter()
-            .map(|n| n.to_utf8().trim_end_matches('.').to_string())
+            .filter_map(|r| match &r.data {
+                RData::PTR(ptr) => Some(ptr.0.to_utf8().trim_end_matches('.').to_string()),
+                _ => None,
+            })
             .collect();
         assert_eq!(names, vec!["dns.google".to_string()]);
 
