@@ -35,17 +35,32 @@ Tested and verified on **Arch Linux** and **Debian 13 (Bookworm)**.
 
 ## ⚙️ Build and Installation
 
-### 1. Install Build Dependencies
+### 📦 Arch Linux (AUR)
+Hulios is available on the Arch User Repository as `hulios-git`:
+
+```bash
+# Using paru
+paru -S hulios-git
+
+# Using yay
+yay -S hulios-git
+```
+
+---
+
+### 🛠️ Building from Source
+
+#### 1. Install Build Dependencies
 *   **Arch Linux:**
     ```bash
-    sudo pacman -S clang libelf
+    sudo pacman -S clang libelf zlib sqlite
     ```
 *   **Debian/Ubuntu:**
     ```bash
-    sudo apt install -y clang libelf-dev
+    sudo apt install -y clang libelf-dev zlib1g-dev libsqlite3-dev
     ```
 
-### 2. Compile from Source
+#### 2. Compile from Source
 Ensure you have the Rust compiler installed (toolchain selection and target requirements are automatically managed by `rust-toolchain.toml`):
 ```bash
 git clone https://github.com/ghaziwali/Hulios.git
