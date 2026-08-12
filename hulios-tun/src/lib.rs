@@ -527,7 +527,8 @@ pub async fn check_table_100(tun_name: &str) -> Result<()> {
         let table = if route.header.table != 0 {
             route.header.table as u32
         } else {
-            route.attributes
+            route
+                .attributes
                 .iter()
                 .find_map(|attr| match attr {
                     RouteAttribute::Table(t) => Some(*t),
