@@ -40,6 +40,9 @@ jobs:
         components: rust-src, clippy, rustfmt
         targets: ${{ matrix.target }}
 
+    - name: Ensure Rust target is installed
+      run: rustup target add ${{ matrix.target }}
+
     - name: Cache cargo registry and build target
       uses: actions/cache@v6
       with:
