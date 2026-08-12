@@ -68,7 +68,11 @@ jobs:
 
     - name: Build release binary
       run: |
-        cargo build --release --target ${{ matrix.target }}
+        if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+          OPENSSL_NO_VENDOR=0 cargo build --release --target ${{ matrix.target }}
+        else
+          cargo build --release --target ${{ matrix.target }}
+        fi
 
     - name: Package release asset
       run: |
