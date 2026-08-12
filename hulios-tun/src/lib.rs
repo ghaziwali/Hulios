@@ -450,6 +450,107 @@ pub async fn add_policy_rules(fwmark: u32, tun_name: &str, ipv6_enabled: bool) -
     Ok(())
 }
 
+pub async fn check_routing_rules(fwmark: u32) -> Result<()> {
+    if std::env::var("HULIOS_MOCK_IP_RULES").is_ok() {
+        if std::env::var("HULIOS_MOCK_IP_RULES").unwrap() == "fail" {
+            anyhow::bail!("ip rule show does not contain fwmark {} rule", fwmark);
+        }
+        return Ok(());
+    }
+
+    let (connection, rt_handle, _) = rtnetlink::new_connection()?;
+    tokio::spawn(connection);
+
+    use futures::stream::TryStreamExt;
+    use netlink_packet_route::rule::RuleAttribute;
+
+    let mut rules = rt_handle.rule().get(rtnetlink::IpVersion::V4).execute();
+    let mut has_fwmark = false;
+    let mut has_table_100 = false;
+
+    while let Some(rule) = rules.try_next().await? {
+        let table = if rule.header.table != 0 {
+            rule.header.table as u32
+        } else {
+            rule.attributes
+                .iter()
+                .find_map(|attr| match attr {
+                    RuleAttribute::Table(t) => Some(*t),
+                    _ => None,
+                })
+                .unwrap_or(0)
+        };
+
+        let fw = rule.attributes.iter().find_map(|attr| match attr {
+            RuleAttribute::FwMark(mark) => Some(*mark),
+            _ => None,
+        });
+
+        if fw == Some(fwmark) {
+            has_fwmark = true;
+        }
+        if table == 100 {
+            has_table_100 = true;
+        }
+    }
+
+    if !has_fwmark {
+        anyhow::bail!("ip rule show does not contain fwmark {} rule", fwmark);
+    }
+    if !has_table_100 {
+        anyhow::bail!("ip rule show does not contain table 100 rule");
+    }
+    Ok(())
+}
+
+pub async fn check_table_100(tun_name: &str) -> Result<()> {
+    if std::env::var("HULIOS_MOCK_IP_ROUTES").is_ok() {
+        if std::env::var("HULIOS_MOCK_IP_ROUTES").unwrap() == "fail" {
+            anyhow::bail!(
+                "ip route show table 100 does not contain default dev {}",
+                tun_name
+            );
+        }
+        return Ok(());
+    }
+
+    let (connection, rt_handle, _) = rtnetlink::new_connection()?;
+    tokio::spawn(connection);
+
+    use futures::stream::TryStreamExt;
+    use netlink_packet_route::route::RouteAttribute;
+
+    let mut routes = rt_handle.route().get(rtnetlink::IpVersion::V4).execute();
+    let mut has_default_table100 = false;
+
+    while let Some(route) = routes.try_next().await? {
+        let table = if route.header.table != 0 {
+            route.header.table as u32
+        } else {
+            route.attributes
+                .iter()
+                .find_map(|attr| match attr {
+                    RouteAttribute::Table(t) => Some(*t),
+                    _ => None,
+                })
+                .unwrap_or(0)
+        };
+
+        if table == 100 && route.header.destination_prefix_length == 0 {
+            has_default_table100 = true;
+            break;
+        }
+    }
+
+    if !has_default_table100 {
+        anyhow::bail!(
+            "ip route show table 100 does not contain default dev {}",
+            tun_name
+        );
+    }
+    Ok(())
+}
+
 pub async fn remove_policy_rules(fwmark: u32, tun_name: &str) -> Result<()> {
     remove_policy_rules_ex(fwmark, tun_name, false).await
 }

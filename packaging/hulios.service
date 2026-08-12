@@ -20,6 +20,8 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=hulios
 RuntimeDirectory=hulios
+StateDirectory=hulios
+ReadWritePaths=/run/udev/rules.d
 
 # Capabilities
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_BPF CAP_NET_BIND_SERVICE CAP_SYS_TIME

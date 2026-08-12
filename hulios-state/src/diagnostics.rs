@@ -19,63 +19,11 @@ pub struct DiagnoseReport {
 }
 
 pub async fn check_routing_rules(fwmark: u32) -> Result<()> {
-    if std::env::var("HULIOS_MOCK_IP_RULES").is_ok() {
-        if std::env::var("HULIOS_MOCK_IP_RULES").unwrap() == "fail" {
-            anyhow::bail!("ip rule show does not contain fwmark {} rule", fwmark);
-        }
-        return Ok(());
-    }
-    let output = tokio::process::Command::new("ip")
-        .args(["rule", "show"])
-        .output()
-        .await
-        .context("Failed to run ip rule show")?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-
-    let fwmark_hex = format!("fwmark {:#x}", fwmark);
-    let fwmark_dec = format!("fwmark {}", fwmark);
-    let has_fwmark = stdout.contains(&fwmark_hex) || stdout.contains(&fwmark_dec);
-
-    let has_table_100 =
-        stdout.contains("lookup 100") || stdout.contains("table 100") || stdout.contains("100");
-
-    if !has_fwmark {
-        anyhow::bail!("ip rule show does not contain fwmark {} rule", fwmark);
-    }
-    if !has_table_100 {
-        anyhow::bail!("ip rule show does not contain table 100 rule");
-    }
-    Ok(())
+    hulios_tun::check_routing_rules(fwmark).await
 }
 
 pub async fn check_table_100(tun_name: &str) -> Result<()> {
-    if std::env::var("HULIOS_MOCK_IP_ROUTES").is_ok() {
-        if std::env::var("HULIOS_MOCK_IP_ROUTES").unwrap() == "fail" {
-            anyhow::bail!(
-                "ip route show table 100 does not contain default dev {}",
-                tun_name
-            );
-        }
-        return Ok(());
-    }
-    let output = tokio::process::Command::new("ip")
-        .args(["route", "show", "table", "100"])
-        .output()
-        .await
-        .context("Failed to run ip route show table 100")?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let has_default = stdout.contains("default");
-    let has_dev = stdout.contains(&format!("dev {}", tun_name));
-
-    if !has_default || !has_dev {
-        anyhow::bail!(
-            "ip route show table 100 does not contain default dev {}",
-            tun_name
-        );
-    }
-    Ok(())
+    hulios_tun::check_table_100(tun_name).await
 }
 
 pub async fn check_udev_shield() -> Result<()> {
