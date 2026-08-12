@@ -414,12 +414,10 @@ pub async fn run_diagnose(json: bool) -> Result<String> {
         } else {
             (42, "hulios0".to_string())
         }
+    } else if let Some(ref cfg) = file_cfg {
+        (cfg.fwmark, cfg.tun_name.clone())
     } else {
-        if let Some(ref cfg) = file_cfg {
-            (cfg.fwmark, cfg.tun_name.clone())
-        } else {
-            (42, "hulios0".to_string())
-        }
+        (42, "hulios0".to_string())
     };
 
     let ipv6_mode = state_ipv6.unwrap_or_else(|| {

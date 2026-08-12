@@ -77,11 +77,9 @@ fn chown_recursive_to_root(path: &std::path::Path) -> Result<()> {
                 let path = entry.path();
                 if path.is_dir() {
                     visit_dirs(&path, uid, gid)?;
-                } else {
-                    if nix::unistd::Uid::effective().is_root() {
-                        nix::unistd::chown(&path, uid, gid)
-                            .with_context(|| format!("Failed to chown {:?}", path))?;
-                    }
+                } else if nix::unistd::Uid::effective().is_root() {
+                    nix::unistd::chown(&path, uid, gid)
+                        .with_context(|| format!("Failed to chown {:?}", path))?;
                 }
             }
         }
