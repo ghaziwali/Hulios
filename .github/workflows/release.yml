@@ -61,7 +61,7 @@ jobs:
     - name: Install bpf-linker
       if: steps.cache-bpf-linker.outputs.cache-hit != 'true'
       run: |
-        curl -sSfL https://github.com/aya-rs/bpf-linker/releases/download/v0.9.12/bpf-linker-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C ~/.cargo/bin
+        curl -sSfL -H "User-Agent: Mozilla/5.0" https://github.com/aya-rs/bpf-linker/releases/download/v0.11.0/bpf-linker-x86_64-unknown-linux-musl.tar.zst | tar --zstd -x -C ~/.cargo/bin
 
     - name: Build release binary
       run: |
