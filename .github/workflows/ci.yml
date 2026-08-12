@@ -50,7 +50,7 @@ jobs:
     - name: Install bpf-linker
       if: steps.cache-bpf-linker.outputs.cache-hit != 'true'
       run: |
-        cargo install bpf-linker
+        curl -sSFL https://github.com/aya-rs/bpf-linker/releases/download/v0.9.12/bpf-linker-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C ~/.cargo/bin
 
     - name: Check formatting
       run: cargo fmt --all -- --check
